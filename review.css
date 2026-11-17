@@ -109,3 +109,6 @@
   .board-wrap { padding-left: 26px; }
   .file-coordinates { left: 26px; }
 }
+
+.grade-pill.miss { background: rgba(217,132,169,.14); color: #e7a6c3; }
+.analysis-status.error { color: var(--danger); }
