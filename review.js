@@ -400,7 +400,7 @@
 
   function drawArrows(position) {
     if (!arrowSvg) return;
-    arrowSvg.querySelectorAll("line").forEach((line) => line.remove());
+    arrowSvg.querySelectorAll("line, circle").forEach((shape) => shape.remove());
     if (!position) return;
 
     const note = position.originalNote;
@@ -607,36 +607,50 @@
       const gradeLabel = document.createElement("span");
       gradeLabel.textContent = "Last move";
       const gradeValue = document.createElement("span");
-      gradeValue.textContent = lastMove.grade + " · " + formatLoss(lastMove.loss);
+      gradeValue.textContent = review.sourceOnly
+        ? (lastMove.originalNote && lastMove.originalNote.nags.length ? "Original mark " + lastMove.originalNote.nags.join(" ") : "Original PGN entry")
+        : lastMove.grade + " · " + formatLoss(lastMove.loss);
       gradeMetric.append(gradeLabel, gradeValue);
       selectedReviewEl.append(gradeMetric);
 
-      const bestMetric = document.createElement("div");
-      bestMetric.className = "review-metric";
-      const bestLabel = document.createElement("span");
-      bestLabel.textContent = "Best instead";
-      const bestValue = document.createElement("span");
-      bestValue.textContent = lastMove.bestMoveSan || "—";
-      bestMetric.append(bestLabel, bestValue);
-      selectedReviewEl.append(bestMetric);
+      if (!review.sourceOnly) {
+        const bestMetric = document.createElement("div");
+        bestMetric.className = "review-metric";
+        const bestLabel = document.createElement("span");
+        bestLabel.textContent = "Best instead";
+        const bestValue = document.createElement("span");
+        bestValue.textContent = lastMove.bestMoveSan || "—";
+        bestMetric.append(bestLabel, bestValue);
+        selectedReviewEl.append(bestMetric);
+      }
     }
 
-    const lineHeading = document.createElement("strong");
-    lineHeading.textContent = "Engine's principal variation";
-    selectedReviewEl.append(lineHeading);
-    const line = document.createElement("div");
-    line.className = "continuation-line";
-    line.textContent = bestLine;
-    selectedReviewEl.append(line);
+    if (review.sourceOnly) {
+      const sourceHeading = document.createElement("strong");
+      sourceHeading.textContent = "Original PGN analysis";
+      selectedReviewEl.append(sourceHeading);
+      const sourceLine = document.createElement("div");
+      sourceLine.className = "continuation-line";
+      sourceLine.textContent = bestLine || "This export does not contain a saved engine continuation for the selected position.";
+      selectedReviewEl.append(sourceLine);
+    } else {
+      const lineHeading = document.createElement("strong");
+      lineHeading.textContent = "Engine's principal variation";
+      selectedReviewEl.append(lineHeading);
+      const line = document.createElement("div");
+      line.className = "continuation-line";
+      line.textContent = bestLine;
+      selectedReviewEl.append(line);
 
-    if (secondLine) {
-      const altLabel = document.createElement("strong");
-      altLabel.textContent = "Alternative candidate";
-      selectedReviewEl.append(altLabel);
-      const alt = document.createElement("div");
-      alt.className = "continuation-line";
-      alt.textContent = secondLine;
-      selectedReviewEl.append(alt);
+      if (secondLine) {
+        const altLabel = document.createElement("strong");
+        altLabel.textContent = "Alternative candidate";
+        selectedReviewEl.append(altLabel);
+        const alt = document.createElement("div");
+        alt.className = "continuation-line";
+        alt.textContent = secondLine;
+        selectedReviewEl.append(alt);
+      }
     }
 
     const originalNote = position.originalNote;
@@ -662,7 +676,9 @@
     const tactical = document.createElement("div");
     tactical.className = "threat-note";
     const lineMoves = best ? uciToSan(position.fen, best.pv) : [];
-    if (lineMoves.some((san) => san.includes("x") || san.includes("+") || san.includes("#"))) {
+    if (review.sourceOnly) {
+      tactical.textContent = "Showing only the analysis annotations that were embedded in the imported PGN. Run Stockfish analysis for fresh threats and candidate lines.";
+    } else if (lineMoves.some((san) => san.includes("x") || san.includes("+") || san.includes("#"))) {
       tactical.textContent = "Tactical alert: the engine's top line contains a capture or check. Follow the continuation to inspect it.";
     } else {
       tactical.textContent = "Threat preview: follow the engine's top continuation to see the strongest reply and its follow-up.";
