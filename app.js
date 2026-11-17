@@ -425,6 +425,7 @@
     $("#download-pgn").disabled = true;
     $("#source-game-link").classList.add("hidden");
     updateMoveControls();
+    window.dispatchEvent(new CustomEvent("knightline:game-cleared"));
     renderBoard(START_FEN);
     $("#game-result").textContent = "SELECT A GAME";
     $("#game-players").textContent = "Choose a game to replay";
