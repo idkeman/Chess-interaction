@@ -46,4 +46,4 @@ Knightline only offers analysis for archived/completed games. It does not analyz
 
 ## Independence and attribution
 
-Knightline is an independent community project. It is not affiliated with, endorsed by, or sponsored by Chess.com. Chess.com and its related marks are the property of their respective owners. The app uses a distinct visual design and does not include Chess.com board or piece artwork. Stockfish.js is loaded from the pinned v19.0.0 npm release; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for engine source and licensing.
+Knightline is an independent community project. It is not affiliated with, endorsed by, or sponsored by Chess.com. Chess.com and its related marks are the property of their respective owners. The app uses a distinct visual design and does not include Chess.com board or piece artwork. Stockfish.js is loaded from the pinned v19.0.1 npm release; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for engine source and licensing.
