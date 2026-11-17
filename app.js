@@ -298,31 +298,33 @@
   function renderBoard(fen) {
     const board = $("#chessboard");
     board.replaceChildren();
-    const placement = String(fen || "8/8/8/8/8/8/8/8").split(" ")[0];
+    const placement = String(fen || START_FEN).split(" ")[0];
     const ranks = placement.split("/");
 
     ranks.forEach((rank, rankIndex) => {
       let fileIndex = 0;
-      for (const character of rank) {
-        if (/\d/.test(character)) {
-          fileIndex += Number(character);
-          continue;
+      const appendSquare = (pieceCharacter = "") => {
+        const square = document.createElement("div");
+        square.className = "square " + ((rankIndex + fileIndex) % 2 === 1 ? "light" : "dark");
+        if (pieceCharacter) {
+          const piece = document.createElement("span");
+          piece.className = pieceCharacter === pieceCharacter.toUpperCase() ? "piece-white" : "piece-black";
+          piece.textContent = PIECES[pieceCharacter] || "";
+          square.append(piece);
         }
-        const square = document.createElement("div");
-        square.className = "square " + ((rankIndex + fileIndex) % 2 === 1 ? "light" : "dark");
-        const piece = document.createElement("span");
-        piece.className = character === character.toUpperCase() ? "piece-white" : "piece-black";
-        piece.textContent = PIECES[character] || "";
-        square.append(piece);
         board.append(square);
         fileIndex += 1;
+      };
+
+      for (const character of rank) {
+        if (/\\d/.test(character)) {
+          const emptyCount = Number(character);
+          for (let empty = 0; empty < emptyCount; empty += 1) appendSquare();
+        } else {
+          appendSquare(character);
+        }
       }
-      while (fileIndex < 8) {
-        const square = document.createElement("div");
-        square.className = "square " + ((rankIndex + fileIndex) % 2 === 1 ? "light" : "dark");
-        board.append(square);
-        fileIndex += 1;
-      }
+      while (fileIndex < 8) appendSquare();
     });
   }
 
