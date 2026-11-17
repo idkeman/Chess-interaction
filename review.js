@@ -226,7 +226,7 @@
     const attachComment = (comment) => {
       if (moveIndex < 0 || moveIndex >= notes.length) return;
       const note = notes[moveIndex];
-      const evalMatch = comment.match(/\[%eval\s+([+-]?(?:\d+(?:\.\d+)?|#\d+))\]/i);
+      const evalMatch = comment.match(/\[%eval\s+([+-]?(?:\d+(?:\.\d+)?|#\d+))(?:,\d+)?\]/i);
       if (evalMatch) {
         const raw = evalMatch[1];
         const mateMatch = raw.match(/^([+-]?)#(\d+)$/);
