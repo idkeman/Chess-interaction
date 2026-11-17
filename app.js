@@ -6,7 +6,7 @@
     "agreed", "repetition", "stalemate", "insufficient", "50move",
     "timevsinsufficient", "threecheck"
   ]);
-  const PIECES = {
+  const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";\n  const PIECES = {
     K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙",
     k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟"
   };
@@ -308,7 +308,7 @@
           continue;
         }
         const square = document.createElement("div");
-        square.className = "square " + ((rankIndex + fileIndex) % 2 === 0 ? "light" : "dark");
+        square.className = "square " + ((rankIndex + fileIndex) % 2 === 1 ? "light" : "dark");
         const piece = document.createElement("span");
         piece.className = character === character.toUpperCase() ? "piece-white" : "piece-black";
         piece.textContent = PIECES[character] || "";
@@ -318,7 +318,7 @@
       }
       while (fileIndex < 8) {
         const square = document.createElement("div");
-        square.className = "square " + ((rankIndex + fileIndex) % 2 === 0 ? "light" : "dark");
+        square.className = "square " + ((rankIndex + fileIndex) % 2 === 1 ? "light" : "dark");
         board.append(square);
         fileIndex += 1;
       }
@@ -408,7 +408,7 @@
     state.replayChess = null;
     $("#download-pgn").disabled = true;
     updateMoveControls();
-    renderBoard(new window.Chess().fen());
+    renderBoard(START_FEN);
     $("#game-result").textContent = "SELECT A GAME";
     $("#game-players").textContent = "Choose a game to replay";
     $("#game-details").textContent = "Moves are displayed locally from the published PGN.";
@@ -546,7 +546,7 @@
   $("#last-move").addEventListener("click", () => goToMove(state.moveHistory.length));
   $("#download-pgn").addEventListener("click", downloadSelectedPgn);
 
-  renderBoard(new window.Chess().fen());
+  renderBoard(START_FEN);
   try {
     const lastUser = localStorage.getItem("knightline:lastUser");
     if (lastUser) usernameInput.value = lastUser;
