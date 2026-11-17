@@ -6,7 +6,8 @@
     "agreed", "repetition", "stalemate", "insufficient", "50move",
     "timevsinsufficient", "threecheck"
   ]);
-  const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";\n  const PIECES = {
+  const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  const PIECES = {
     K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙",
     k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟"
   };
