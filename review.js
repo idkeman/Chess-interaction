@@ -561,7 +561,9 @@
     moveFeedbackEl.append(fragment);
 
     const critical = (counts.Blunder || 0) + (counts.Mistake || 0) + (counts.Inaccuracy || 0) + (counts.Miss || 0);
-    $("#move-feedback-count").textContent = review.moveReviews.length + " reviewed · " + critical + " key errors";
+    $("#move-feedback-count").textContent = review.sourceOnly
+      ? review.moveReviews.length + " moves · original PGN data"
+      : review.moveReviews.length + " reviewed · " + critical + " key errors";
   }
 
   function showSelectedPosition(moveIndex) {
@@ -717,11 +719,13 @@
       $("#white-performance").textContent = whiteRating ? "Recorded game rating " + Number(whiteRating).toLocaleString() : "No game rating in this PGN";
       $("#black-performance").textContent = blackRating ? "Recorded game rating " + Number(blackRating).toLocaleString() : "No game rating in this PGN";
       const sourceItems = review.moveReviews.reduce((sum, item) => sum + (item.originalNote ? item.originalNote.comments.length + item.originalNote.nags.length + item.originalNote.arrows.length + item.originalNote.squares.length + (item.originalNote.eval ? 1 : 0) : 0), 0);
+      $("#game-quality").parentElement.querySelector(".summary-label").textContent = "SOURCE ANNOTATIONS";
       $("#game-quality").textContent = String(sourceItems);
       $("#game-quality-sub").textContent = "Original PGN annotations";
       return;
     }
 
+    $("#game-quality").parentElement.querySelector(".summary-label").textContent = "MOVE QUALITY";
     $("#white-analysis-name").textContent = whiteOriginal == null ? whiteName.toUpperCase() + " · ENGINE ESTIMATE" : whiteName.toUpperCase() + " · CHESS.COM ACCURACY";
     $("#black-analysis-name").textContent = blackOriginal == null ? blackName.toUpperCase() + " · ENGINE ESTIMATE" : blackName.toUpperCase() + " · CHESS.COM ACCURACY";
 
