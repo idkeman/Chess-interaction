@@ -450,9 +450,9 @@
   }
 
   function updateEvalBar(position) {
-    if (!position) {
+    if (!position || (position.originalWhiteCp == null && position.whiteCp == null)) {
       evalFill.style.height = "50%";
-      evalScore.textContent = "—";
+      evalScore.textContent = "No eval";
       return;
     }
     const cp = position.originalWhiteCp ?? position.whiteCp ?? 0;
@@ -549,7 +549,9 @@
       const detail = document.createElement("span");
       const sourceMark = item.originalNote && item.originalNote.nags.length ? " · Original PGN " + item.originalNote.nags.join(" ") : "";
       const sourceComment = item.originalNote && item.originalNote.comments.length ? " · " + item.originalNote.comments.join(" ").slice(0, 110) : "";
-      detail.textContent = (item.bestMoveMatch ? "Engine's top choice" : formatLoss(item.loss)) + sourceMark + sourceComment;
+      detail.textContent = review.sourceOnly
+        ? ((item.originalNote && (item.originalNote.comments.length || item.originalNote.nags.length || item.originalNote.eval)) ? "Source annotation" : "No original note") + sourceMark + sourceComment
+        : (item.bestMoveMatch ? "Engine's top choice" : formatLoss(item.loss)) + sourceMark + sourceComment;
       if (sourceComment) detail.title = item.originalNote.comments.join(" ");
       moveText.append(moveName, detail);
       const grade = document.createElement("span");
