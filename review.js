@@ -399,6 +399,34 @@
     arrowSvg.querySelectorAll("line").forEach((line) => line.remove());
     if (!position || !position.lines || !position.lines.length) return;
 
+    const note = position.originalNote;
+    if (note && note.arrows.length) {
+      note.arrows.forEach((arrow) => {
+        const fromFile = arrow.from.charCodeAt(0) - 97;
+        const fromRank = Number(arrow.from[1]);
+        const toFile = arrow.to.charCodeAt(0) - 97;
+        const toRank = Number(arrow.to[1]);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(fromFile + 0.5));
+        line.setAttribute("y1", String(8 - fromRank + 0.5));
+        line.setAttribute("x2", String(toFile + 0.5));
+        line.setAttribute("y2", String(8 - toRank + 0.5));
+        line.setAttribute("class", "original-arrow " + arrow.color);
+        arrowSvg.append(line);
+      });
+    }
+    if (note && note.squares.length) {
+      note.squares.forEach((square) => {
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const file = square.square.charCodeAt(0) - 97;
+        const rank = Number(square.square[1]);
+        circle.setAttribute("cx", String(file + 0.5));
+        circle.setAttribute("cy", String(8 - rank + 0.5));
+        circle.setAttribute("r", ".40");
+        circle.setAttribute("class", "original-square " + square.color);
+        arrowSvg.append(circle);
+      });
+    }
     position.lines.slice(0, 2).forEach((candidate, index) => {
       const move = candidate.pv && candidate.pv[0];
       if (!move || !/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(move)) return;
@@ -514,11 +542,15 @@
       const moveName = document.createElement("strong");
       moveName.textContent = (item.color === "w" ? "White " : "Black ") + item.san;
       const detail = document.createElement("span");
-      detail.textContent = item.bestMoveMatch ? "Engine's top choice" : formatLoss(item.loss);
+      const sourceMark = item.originalNote && item.originalNote.nags.length ? " · Original PGN " + item.originalNote.nags.join(" ") : "";
+      const sourceComment = item.originalNote && item.originalNote.comments.length ? " · " + item.originalNote.comments.join(" ").slice(0, 110) : "";
+      detail.textContent = (item.bestMoveMatch ? "Engine's top choice" : formatLoss(item.loss)) + sourceMark + sourceComment;
+      if (sourceComment) detail.title = item.originalNote.comments.join(" ");
       moveText.append(moveName, detail);
       const grade = document.createElement("span");
       grade.className = "grade-pill " + gradeClass(item.grade);
-      grade.textContent = item.grade;
+      grade.textContent = item.originalNote && item.originalNote.nags.length ? "PGN " + item.originalNote.nags[0] : item.grade;
+      if (item.originalNote && item.originalNote.nags.length) grade.classList.add("original-annotation");
       row.append(number, moveText, grade);
       row.addEventListener("click", () => window.KnightlineBridge.setMove(index + 1));
       fragment.append(row);
@@ -598,6 +630,26 @@
       alt.className = "continuation-line";
       alt.textContent = secondLine;
       selectedReviewEl.append(alt);
+    }
+
+    const originalNote = position.originalNote;
+    if (originalNote) {
+      if (originalNote.nags.length) {
+        const originalMark = document.createElement("div");
+        originalMark.className = "review-metric";
+        const originalLabel = document.createElement("span");
+        originalLabel.textContent = "Original PGN judgement";
+        const originalValue = document.createElement("span");
+        originalValue.textContent = originalNote.nags.join(" ");
+        originalMark.append(originalLabel, originalValue);
+        selectedReviewEl.append(originalMark);
+      }
+      if (originalNote.comments.length) {
+        const comment = document.createElement("div");
+        comment.className = "original-comment";
+        comment.textContent = "Original PGN comment: " + originalNote.comments.join(" ");
+        selectedReviewEl.append(comment);
+      }
     }
 
     const tactical = document.createElement("div");
