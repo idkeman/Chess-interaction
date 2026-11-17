@@ -1,6 +1,6 @@
 # Third-party notices
 
-## Stockfish.js 19.0.0 Lite single-threaded
+## Stockfish.js 19 Lite single-threaded (npm package 19.0.1)
 
 Knightline loads the following engine assets on demand from jsDelivr:
 
@@ -9,8 +9,8 @@ Knightline loads the following engine assets on demand from jsDelivr:
 
 The engine is Stockfish.js by Nathan Rugg and contributors. Stockfish.js is distributed under the GNU General Public License v3.0 (GPL-3.0).
 
-- Source and release: https://github.com/nmrugg/stockfish.js/tree/v19.0.1
-- License text: https://github.com/nmrugg/stockfish.js/blob/v19.0.1/Copying.txt
+- Source and release: https://github.com/nmrugg/stockfish.js/tree/v19.0.0
+- License text: https://github.com/nmrugg/stockfish.js/blob/v19.0.0/Copying.txt
 - Upstream Stockfish: https://github.com/official-stockfish/Stockfish
 
 The JavaScript and WebAssembly engine files are not copied into this repository; the browser fetches the pinned release from jsDelivr when a user starts an analysis.
