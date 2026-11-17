@@ -11,6 +11,8 @@
     selectedPgn: "",
     selectedGame: null,
     selectedUsername: "",
+    originalNotes: [],
+    originalEvalCount: 0,
     runId: 0
   };
 
@@ -204,6 +206,97 @@
     }
 
     return { positions, moves: normalizedMoves, headers: readHeaders(pgn) };
+  }
+
+
+  function parsePgnAnnotations(pgn, moveCount) {
+    const notes = Array.from({ length: moveCount }, () => ({
+      comments: [], nags: [], arrows: [], squares: [], eval: null
+    }));
+    const body = String(pgn).replace(/^\s*\[[^\]]*\]\s*$/gm, " ");
+    const tokens = body.match(/\{[^}]*\}|;[^\n]*|\(|\)|\$\d+|\d+\.(?:\.\.)?|[^\s{}()]+/g) || [];
+    let moveIndex = -1;
+    let variationDepth = 0;
+
+    const attachNag = (symbol) => {
+      if (moveIndex >= 0 && moveIndex < notes.length && symbol && !notes[moveIndex].nags.includes(symbol)) {
+        notes[moveIndex].nags.push(symbol);
+      }
+    };
+    const attachComment = (comment) => {
+      if (moveIndex < 0 || moveIndex >= notes.length) return;
+      const note = notes[moveIndex];
+      const evalMatch = comment.match(/\[%eval\s+([+-]?(?:\d+(?:\.\d+)?|#\d+))\]/i);
+      if (evalMatch) {
+        const raw = evalMatch[1];
+        const mateMatch = raw.match(/^([+-]?)#(\d+)$/);
+        if (mateMatch) {
+          const sign = mateMatch[1] === "-" ? -1 : 1;
+          const distance = Number(mateMatch[2]);
+          note.eval = { type: "mate", value: sign * distance, whiteCp: sign * (10000 - distance * 10) };
+        } else {
+          const value = Number(raw);
+          if (Number.isFinite(value)) note.eval = { type: "cp", value, whiteCp: Math.round(value * 100) };
+        }
+      }
+      for (const match of comment.matchAll(/\[%cal\s+([^\]]+)\]/ig)) {
+        for (const item of match[1].split(",")) {
+          const arrow = item.trim().match(/^([GRYB])([a-h][1-8])([a-h][1-8])$/i);
+          if (arrow) note.arrows.push({ color: arrow[1].toLowerCase(), from: arrow[2], to: arrow[3] });
+        }
+      }
+      for (const match of comment.matchAll(/\[%csl\s+([^\]]+)\]/ig)) {
+        for (const item of match[1].split(",")) {
+          const square = item.trim().match(/^([GRYB])([a-h][1-8])$/i);
+          if (square) note.squares.push({ color: square[1].toLowerCase(), square: square[2] });
+        }
+      }
+      const plain = comment
+        .replace(/\[%eval\s+[^\]]+\]/ig, "")
+        .replace(/\[%cal\s+[^\]]+\]/ig, "")
+        .replace(/\[%csl\s+[^\]]+\]/ig, "")
+        .replace(/\[%[a-z]+\s+[^\]]+\]/ig, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (plain) note.comments.push(plain);
+    };
+
+    for (let token of tokens) {
+      if (token === "(") { variationDepth += 1; continue; }
+      if (token === ")") { variationDepth = Math.max(0, variationDepth - 1); continue; }
+      if (variationDepth > 0) continue;
+
+      if (token.startsWith("{") && token.endsWith("}")) {
+        attachComment(token.slice(1, -1));
+        continue;
+      }
+      if (token.startsWith(";")) {
+        attachComment(token.slice(1));
+        continue;
+      }
+      if (/^\$\d+$/.test(token)) {
+        const nag = Number(token.slice(1));
+        const symbol = ({ 1: "!", 2: "?", 3: "!!", 4: "??", 5: "!?", 6: "?!" })[nag];
+        if (symbol) attachNag(symbol);
+        continue;
+      }
+      if (/^\d+\.(?:\.\.)?$/.test(token)) continue;
+      if (/^(1-0|0-1|1\/2-1\/2|\*)$/.test(token)) continue;
+
+      let moveToken = token.replace(/^\d+\.(?:\.\.)?/, "");
+      if (!moveToken || moveToken === "e.p." || moveToken === "...") continue;
+      const symbolMatch = moveToken.match(/(!!|\?\?|!\?|\?!|!|\?)$/);
+      const symbol = symbolMatch ? symbolMatch[1] : "";
+      if (symbol) moveToken = moveToken.slice(0, -symbol.length);
+      moveToken = moveToken.replace(/[+#]+$/, "");
+      if (!moveToken) continue;
+
+      moveIndex += 1;
+      if (moveIndex >= notes.length) break;
+      if (symbol) attachNag(symbol);
+    }
+
+    return notes;
   }
 
   function readHeaders(pgn) {
