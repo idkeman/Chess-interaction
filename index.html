@@ -123,6 +123,22 @@
                     <button id="cancel-analysis" class="cancel-analysis hidden" type="button">Stop</button>
                   </div>
                 </div>
+                <section class="original-import">
+                  <div class="original-import-heading">
+                    <div>
+                      <strong>Import Chess.com's original analysis</strong>
+                      <p>Export a reviewed game as PGN with <b>Computer Analysis</b> selected, then load that file here. Embedded evaluations, comments, and arrows can be shown as original data when present.</p>
+                    </div>
+                    <a href="https://support.chess.com/en/articles/8705305-how-do-i-get-a-pgn-of-my-game" target="_blank" rel="noopener noreferrer">Export instructions ↗</a>
+                  </div>
+                  <div class="original-import-controls">
+                    <label class="file-import-label" for="original-pgn-file">Choose reviewed PGN</label>
+                    <input id="original-pgn-file" type="file" accept=".pgn,.txt,text/plain">
+                    <button id="import-original-pgn" class="import-pgn-button" type="button">Import PGN</button>
+                  </div>
+                  <textarea id="original-pgn-text" class="original-pgn-text" rows="3" spellcheck="false" placeholder="Or paste the PGN exported with Computer Analysis here…"></textarea>
+                  <p class="import-source-note">This importer does not retrieve private review data from Chess.com. It reads only the annotations actually present in your exported PGN.</p>
+                </section>
                 <div id="analysis-status" class="analysis-status" role="status" aria-live="polite">Choose a finished game, then run an analysis.</div>
                 <div class="analysis-progress-track"><div id="analysis-progress" class="analysis-progress"></div></div>
                 <div id="analysis-results" class="analysis-results hidden">
