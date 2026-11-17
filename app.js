@@ -394,6 +394,17 @@
       game.time_control ? "Time control " + game.time_control : ""
     ].filter(Boolean).join(" · ");
     $("#download-pgn").disabled = false;
+    const sourceLink = $("#source-game-link");
+    sourceLink.classList.add("hidden");
+    try {
+      const originalUrl = new URL(String(game.url || ""));
+      if (originalUrl.protocol === "https:" && ["chess.com", "www.chess.com"].includes(originalUrl.hostname)) {
+        sourceLink.href = originalUrl.href;
+        sourceLink.classList.remove("hidden");
+      }
+    } catch {
+      // A game may not include a public Chess.com page URL.
+    }
     renderGames(state.games);
     goToMove(0);
     setStatus("");
@@ -407,6 +418,7 @@
     state.moveHistory = [];
     state.replayChess = null;
     $("#download-pgn").disabled = true;
+    $("#source-game-link").classList.add("hidden");
     updateMoveControls();
     renderBoard(START_FEN);
     $("#game-result").textContent = "SELECT A GAME";
