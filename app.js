@@ -342,7 +342,7 @@
       $("#move-counter").textContent = "Starting position";
     } else {
       const fullMove = Math.ceil(state.moveIndex / 2);
-      const side = state.moveIndex % 2 === 0 ? "Black" : "White";
+      const side = state.moveIndex % 2 === 1 ? "Black" : "White";
       $("#move-counter").textContent = "Move " + fullMove + " · " + side + " to play";
     }
   }
