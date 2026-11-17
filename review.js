@@ -455,7 +455,7 @@
       evalScore.textContent = "No eval";
       return;
     }
-    const cp = position.originalWhiteCp ?? position.whiteCp ?? 0;
+    const cp = position.whiteCp ?? position.originalWhiteCp ?? 0;
     const ratio = 1 / (1 + Math.exp(-Math.max(-1000, Math.min(1000, cp)) / 250));
     evalFill.style.height = (ratio * 100).toFixed(1) + "%";
     evalScore.textContent = formatEval(cp);
@@ -489,7 +489,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const values = review.positions.map((position) => Math.max(-1000, Math.min(1000, position.chartWhiteCp ?? position.whiteCp ?? 0)));
+    const values = review.positions.map((position) => { const value = position.chartWhiteCp ?? position.whiteCp ?? position.originalWhiteCp; return Number.isFinite(value) ? Math.max(-1000, Math.min(1000, value)) : null; });
     if (values.length < 2) return;
     const xFor = (i) => 4 + i / (values.length - 1) * (width - 8);
     const yFor = (cp) => {
@@ -497,27 +497,22 @@
       return center - normalized * ((bottom - top) / 2 - 2);
     };
 
-    ctx.fillStyle = "rgba(166,197,170,.10)";
-    ctx.beginPath();
-    ctx.moveTo(xFor(0), center);
-    values.forEach((cp, i) => ctx.lineTo(xFor(i), yFor(cp)));
-    ctx.lineTo(xFor(values.length - 1), center);
-    ctx.closePath();
-    ctx.fill();
-
     ctx.strokeStyle = "#a6c5aa";
     ctx.lineWidth = 2.5;
     ctx.lineJoin = "round";
     ctx.beginPath();
+    let drawing = false;
     values.forEach((cp, i) => {
-      if (i === 0) ctx.moveTo(xFor(i), yFor(cp));
+      if (cp == null) { drawing = false; return; }
+      if (!drawing) ctx.moveTo(xFor(i), yFor(cp));
       else ctx.lineTo(xFor(i), yFor(cp));
+      drawing = true;
     });
     ctx.stroke();
 
     ctx.fillStyle = "#d5e4d5";
     values.forEach((cp, i) => {
-      if (i % Math.max(1, Math.floor(values.length / 28)) !== 0 && i !== values.length - 1) return;
+      if (cp == null || (i % Math.max(1, Math.floor(values.length / 28)) !== 0 && i !== values.length - 1)) return;
       ctx.beginPath();
       ctx.arc(xFor(i), yFor(cp), 2.5, 0, Math.PI * 2);
       ctx.fill();
@@ -597,9 +592,19 @@
     const metricLabel = document.createElement("span");
     metricLabel.textContent = "Evaluation";
     const metricValue = document.createElement("span");
-    metricValue.textContent = formatEval(position.originalWhiteCp ?? position.whiteCp) + " · " + sideToMove + " to move" + (position.originalWhiteCp != null ? " · Original PGN" : " · Stockfish");
+    metricValue.textContent = formatEval(position.whiteCp ?? position.originalWhiteCp) + " · " + sideToMove + " to move" + (review.sourceOnly ? " · Original PGN" : " · Stockfish");
     metrics.append(metricLabel, metricValue);
     selectedReviewEl.append(metrics);
+    if (!review.sourceOnly && position.originalWhiteCp != null) {
+      const originalMetric = document.createElement("div");
+      originalMetric.className = "review-metric";
+      const originalLabel = document.createElement("span");
+      originalLabel.textContent = "Original PGN evaluation";
+      const originalValue = document.createElement("span");
+      originalValue.textContent = formatEval(position.originalWhiteCp);
+      originalMetric.append(originalLabel, originalValue);
+      selectedReviewEl.append(originalMetric);
+    }
 
     if (lastMove) {
       const gradeMetric = document.createElement("div");
@@ -801,7 +806,7 @@
         const originalNote = index > 0 ? (state.originalNotes[index - 1] || null) : null;
         position.originalNote = originalNote;
         if (originalNote && originalNote.eval) position.originalWhiteCp = originalNote.eval.whiteCp;
-        position.chartWhiteCp = position.originalWhiteCp != null ? position.originalWhiteCp : position.whiteCp;
+        position.chartWhiteCp = position.whiteCp ?? position.originalWhiteCp;
       });
 
       const moveReviews = parsed.moves.map((move, index) => {
@@ -942,8 +947,8 @@
       };
       renderSummary(state.review);
       makeMoveFeedback(state.review);
-      $("#eval-graph-card").classList.toggle("hidden", state.originalEvalCount === 0);
-      if (state.originalEvalCount > 0) drawEvaluationGraph(state.review);
+      $("#eval-graph-card").classList.toggle("hidden", state.originalEvalCount < 2);
+      if (state.originalEvalCount >= 2) drawEvaluationGraph(state.review);
       resultsEl.classList.remove("hidden");
       setStatus("Showing original PGN annotations · " + state.originalEvalCount + " evaluations · " + originalCommentCount + " comments · " + originalArrowCount + " arrows/marks · " + originalNagCount + " judgements. Run Stockfish for additional analysis.");
       showSelectedPosition(window.KnightlineBridge.getMoveIndex());
