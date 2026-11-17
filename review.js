@@ -274,6 +274,10 @@
         attachComment(token.slice(1));
         continue;
       }
+      if (/^(!!|\?\?|!\?|\?!|!|\?)$/.test(token)) {
+        attachNag(token);
+        continue;
+      }
       if (/^\$\d+$/.test(token)) {
         const nag = Number(token.slice(1));
         const symbol = ({ 1: "!", 2: "?", 3: "!!", 4: "??", 5: "!?", 6: "?!" })[nag];
