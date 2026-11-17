@@ -309,6 +309,8 @@
       black: header("Black"),
       whiteElo: header("WhiteElo"),
       blackElo: header("BlackElo"),
+      whiteAccuracy: header("WhiteAccuracy"),
+      blackAccuracy: header("BlackAccuracy"),
       date: header("Date"),
       eco: header("ECO"),
       opening: header("Opening")
