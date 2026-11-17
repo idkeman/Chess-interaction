@@ -112,3 +112,56 @@
 
 .grade-pill.miss { background: rgba(217,132,169,.14); color: #e7a6c3; }
 .analysis-status.error { color: var(--danger); }
+
+.original-import {
+  margin-top: 14px; padding: 11px; border: 1px solid rgba(212,183,123,.18);
+  border-radius: 8px; background: rgba(212,183,123,.035);
+}
+.original-import-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.original-import-heading strong { display: block; color: var(--text); font: 600 10px Manrope, sans-serif; }
+.original-import-heading p { margin: 5px 0 0; color: var(--muted); font-size: 9px; line-height: 1.55; max-width: 520px; }
+.original-import-heading a { color: var(--gold); font: 9px 'DM Mono', monospace; white-space: nowrap; }
+.original-import-controls { display: flex; align-items: center; gap: 7px; margin-top: 10px; }
+#original-pgn-file { min-width: 0; flex: 1; color: var(--muted); font-size: 9px; }
+#original-pgn-file::file-selector-button {
+  margin-right: 7px; padding: 7px 8px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--surface-2); color: var(--accent);
+  font: 9px 'DM Mono', monospace; cursor: pointer;
+}
+.file-import-label { display: none; }
+.import-pgn-button {
+  flex: 0 0 auto; border: 1px solid rgba(212,183,123,.27); border-radius: 6px;
+  background: rgba(212,183,123,.1); color: var(--gold);
+  padding: 8px 10px; font: 9px 'DM Mono', monospace; cursor: pointer;
+}
+.import-pgn-button:hover { background: rgba(212,183,123,.16); }
+.original-pgn-text {
+  display: block; width: 100%; min-height: 62px; max-height: 150px; margin-top: 9px;
+  resize: vertical; border: 1px solid var(--line); border-radius: 6px;
+  padding: 8px; outline: 0; background: #111e28; color: var(--text);
+  font: 9px/1.5 'DM Mono', monospace;
+}
+.original-pgn-text:focus { border-color: rgba(212,183,123,.45); }
+.original-pgn-text::placeholder { color: var(--quiet); }
+.import-source-note { margin: 7px 0 0; color: var(--quiet); font-size: 8px; line-height: 1.5; }
+.original-analysis-badge {
+  display: inline-block; margin-left: 5px; padding: 3px 5px; border-radius: 4px;
+  background: rgba(212,183,123,.13); color: var(--gold); font: 8px 'DM Mono', monospace;
+}
+.original-comment { margin-top: 6px; color: #d5c29b; font-size: 8px; line-height: 1.5; }
+.board-arrows .original-arrow { stroke-width: .12; stroke-linecap: round; marker-end: url(#best-arrow-head); opacity: .95; }
+.board-arrows .original-arrow.red { stroke: #ed7770; }
+.board-arrows .original-arrow.green { stroke: #9ed2a7; }
+.board-arrows .original-arrow.yellow { stroke: #e4c36e; }
+.board-arrows .original-arrow.blue { stroke: #82bce3; }
+.board-arrows .original-square { stroke-width: .07; fill-opacity: .18; }
+.board-arrows .original-square.red { stroke: #ed7770; fill: #ed7770; }
+.board-arrows .original-square.green { stroke: #9ed2a7; fill: #9ed2a7; }
+.board-arrows .original-square.yellow { stroke: #e4c36e; fill: #e4c36e; }
+.board-arrows .original-square.blue { stroke: #82bce3; fill: #82bce3; }
+@media (max-width: 700px) {
+  .original-import-heading { flex-direction: column; }
+  .original-import-controls { align-items: flex-start; flex-wrap: wrap; }
+  #original-pgn-file { flex: 1 1 100%; }
+  .import-pgn-button { margin-left: auto; }
+}
