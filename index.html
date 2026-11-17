@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101a24">
+  <meta name="description" content="Knightline is an independent workspace for exploring public Chess.com profiles, ratings, and archived games.">
+  <title>Knightline — Chess activity workspace</title>
+  <link rel="preconnect" href="https://api.chess.com">
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Knightline home">
+        <span class="brand-mark" aria-hidden="true">♞</span>
+        <span><strong>KNIGHTLINE</strong><small>CHESS ACTIVITY WORKSPACE</small></span>
+      </a>
+      <div class="topbar-right">
+        <span class="connection-indicator"><i></i> PUBLIC DATA CONNECTION</span>
+        <a class="top-link" href="https://www.chess.com" target="_blank" rel="noopener noreferrer">Open Chess.com ↗</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">YOUR CHESS DATA, IN ONE PLACE</p>
+          <h1>Follow the game.<br><span>Understand the history.</span></h1>
+          <p class="hero-description">Look up public player stats, browse archived games, and replay finished matches from a clean, independent workspace.</p>
+          <form id="search-form" class="search-form" autocomplete="off">
+            <label class="sr-only" for="username-input">Chess.com username</label>
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input id="username-input" name="username" maxlength="25" placeholder="Enter a Chess.com username" spellcheck="false" required>
+            <button id="search-button" type="submit"><span>Find player</span><b aria-hidden="true">→</b></button>
+          </form>
+          <p class="search-hint">Try a public username, such as <button class="text-button" type="button" data-example="hikaru">hikaru</button> or <button class="text-button" type="button" data-example="magnuscarlsen">magnuscarlsen</button>.</p>
+          <div id="status-message" class="status-message" role="status" aria-live="polite"></div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="hero-piece">♞</div>
+          <div class="hero-coordinate coord-a">E4</div>
+          <div class="hero-coordinate coord-b">C6</div>
+          <div class="hero-coordinate coord-c">G2</div>
+          <div class="hero-line"></div>
+        </div>
+      </section>
+
+      <section id="dashboard" class="dashboard hidden" aria-live="polite">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">PLAYER OVERVIEW</p>
+            <h2 id="profile-heading">Player profile</h2>
+          </div>
+          <a id="profile-link" class="outline-link" href="https://www.chess.com" target="_blank" rel="noopener noreferrer">View on Chess.com ↗</a>
+        </div>
+
+        <div class="profile-card">
+          <div class="avatar" id="avatar">♟</div>
+          <div class="profile-main">
+            <div class="profile-name-line"><h3 id="player-name">—</h3><span id="player-title" class="title-badge hidden"></span></div>
+            <p id="profile-meta" class="profile-meta">Public profile</p>
+            <p id="profile-bio" class="profile-bio"></p>
+          </div>
+          <div class="online-status" id="online-status"><i></i><span>Checking status</span></div>
+        </div>
+
+        <div class="stats-heading">
+          <div><p class="eyebrow">RATING SNAPSHOT</p><h2>Current ratings</h2></div>
+          <span class="subtle-note">Public data · may be cached by Chess.com</span>
+        </div>
+        <div id="ratings-grid" class="ratings-grid">
+          <div class="stat-card"><span class="skeleton"></span><span class="skeleton short"></span></div>
+          <div class="stat-card"><span class="skeleton"></span><span class="skeleton short"></span></div>
+          <div class="stat-card"><span class="skeleton"></span><span class="skeleton short"></span></div>
+          <div class="stat-card"><span class="skeleton"></span><span class="skeleton short"></span></div>
+        </div>
+
+        <section class="games-section">
+          <div class="section-heading game-heading">
+            <div><p class="eyebrow">MATCH HISTORY</p><h2>Archived games</h2><p class="section-description">Browse finished games published in this player's monthly archive.</p></div>
+            <div class="archive-controls">
+              <label for="archive-select">Archive month</label>
+              <select id="archive-select" disabled><option>Load a player first</option></select>
+            </div>
+          </div>
+          <div class="games-layout">
+            <div class="games-panel">
+              <div class="panel-toolbar"><span id="games-count">No games loaded</span><button id="refresh-games" class="icon-button" type="button" disabled title="Reload this archive" aria-label="Reload this archive">↻</button></div>
+              <div id="games-list" class="games-list empty-list">
+                <div class="empty-state"><span class="empty-icon">♜</span><strong>No archive selected</strong><p>Search for a player to load their available game history.</p></div>
+              </div>
+            </div>
+            <div class="viewer-panel">
+              <div class="viewer-topline"><span>GAME VIEWER</span><span id="game-result" class="game-result">SELECT A GAME</span></div>
+              <div class="board-wrap">
+                <div class="board-coordinates" aria-hidden="true"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
+                <div id="chessboard" class="chessboard" aria-label="Chess board position"></div>
+                <div class="file-coordinates" aria-hidden="true"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
+              </div>
+              <div class="move-controls">
+                <button id="first-move" type="button" aria-label="Go to start" disabled>⇤</button>
+                <button id="prev-move" type="button" aria-label="Previous move" disabled>←</button>
+                <span id="move-counter">No game selected</span>
+                <button id="next-move" type="button" aria-label="Next move" disabled>→</button>
+                <button id="last-move" type="button" aria-label="Go to end" disabled>⇥</button>
+              </div>
+              <div class="viewer-footer">
+                <div><strong id="game-players">Choose a game to replay</strong><span id="game-details">Moves are displayed locally from the published PGN.</span></div>
+                <button id="download-pgn" class="download-button" type="button" disabled>↓ PGN</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="feature-strip">
+        <article><span class="feature-number">01</span><div><h3>Public player data</h3><p>Profiles, titles, online status, and rating snapshots from Chess.com's published data.</p></div></article>
+        <article><span class="feature-number">02</span><div><h3>Game archive</h3><p>Choose an available month and browse finished games with their original PGNs.</p></div></article>
+        <article><span class="feature-number">03</span><div><h3>Move playback</h3><p>Step through a selected game on an independent board. No engine or move suggestions.</p></div></article>
+      </section>
+
+      <section class="live-note">
+        <div class="live-icon">↗</div>
+        <div><h2>Ready to play a game?</h2><p>Live games and account actions stay on Chess.com. Open the site directly to sign in, find a match, or make moves.</p></div>
+        <a href="https://www.chess.com/play" target="_blank" rel="noopener noreferrer">Go to live chess ↗</a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a class="footer-brand" href="./">♞ KNIGHTLINE</a>
+      <p>Independent community project. Not affiliated with, endorsed by, or sponsored by Chess.com.</p>
+      <a href="https://www.chess.com/news/view/published-data-api" target="_blank" rel="noopener noreferrer">Published Data API ↗</a>
+    </footer>
+  </div>
+  <noscript><div class="noscript">Knightline requires JavaScript to load public player data.</div></noscript>
+</body>
+</html>
