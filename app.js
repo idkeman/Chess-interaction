@@ -358,6 +358,7 @@
     state.moveIndex = index;
     renderBoard(replay.fen());
     updateMoveControls();
+    window.dispatchEvent(new CustomEvent("knightline:position", { detail: { moveIndex: index } }));
   }
 
   function selectGame(index) {
@@ -410,6 +411,7 @@
     }
     renderGames(state.games);
     goToMove(0);
+    window.dispatchEvent(new CustomEvent("knightline:game-selected", { detail: { username: state.username, game, pgn } }));
     setStatus("");
   }
 
@@ -560,6 +562,14 @@
   $("#next-move").addEventListener("click", () => goToMove(Math.min(state.moveHistory.length, state.moveIndex + 1)));
   $("#last-move").addEventListener("click", () => goToMove(state.moveHistory.length));
   $("#download-pgn").addEventListener("click", downloadSelectedPgn);
+
+  window.KnightlineBridge = {
+    getSelectedGame: () => state.games[state.selectedGameIndex] || null,
+    getSelectedPgn: () => state.selectedPgn,
+    getUsername: () => state.username,
+    getMoveIndex: () => state.moveIndex,
+    setMove: (index) => goToMove(Math.max(0, Math.min(state.moveHistory.length, Number(index) || 0)))
+  };
 
   renderBoard(START_FEN);
   try {
