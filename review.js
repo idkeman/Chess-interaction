@@ -545,14 +545,15 @@
       const sourceMark = item.originalNote && item.originalNote.nags.length ? " · Original PGN " + item.originalNote.nags.join(" ") : "";
       const sourceComment = item.originalNote && item.originalNote.comments.length ? " · " + item.originalNote.comments.join(" ").slice(0, 110) : "";
       detail.textContent = review.sourceOnly
-        ? ((item.originalNote && (item.originalNote.comments.length || item.originalNote.nags.length || item.originalNote.eval)) ? "Source annotation" : "No original note") + sourceMark + sourceComment
+        ? (item.sourceDerived ? "Derived from original eval · " + formatLoss(item.loss) : ((item.originalNote && (item.originalNote.comments.length || item.originalNote.nags.length || item.originalNote.eval)) ? "Source annotation" : "No original note")) + sourceMark + sourceComment
         : (item.bestMoveMatch ? "Engine's top choice" : formatLoss(item.loss)) + sourceMark + sourceComment;
       if (sourceComment) detail.title = item.originalNote.comments.join(" ");
       moveText.append(moveName, detail);
       const grade = document.createElement("span");
       grade.className = "grade-pill " + gradeClass(item.grade);
-      grade.textContent = item.originalNote && item.originalNote.nags.length ? "PGN " + item.originalNote.nags[0] : item.grade;
+      grade.textContent = item.originalNote && item.originalNote.nags.length ? "PGN " + item.originalNote.nags[0] : item.sourceDerived ? "Eval " + item.grade : item.grade;
       if (item.originalNote && item.originalNote.nags.length) grade.classList.add("original-annotation");
+      if (item.sourceDerived) grade.classList.add("derived-annotation");
       row.append(number, moveText, grade);
       row.addEventListener("click", () => window.KnightlineBridge.setMove(index + 1));
       fragment.append(row);
@@ -613,7 +614,7 @@
       gradeLabel.textContent = "Last move";
       const gradeValue = document.createElement("span");
       gradeValue.textContent = review.sourceOnly
-        ? (lastMove.originalNote && lastMove.originalNote.nags.length ? "Original mark " + lastMove.originalNote.nags.join(" ") : "Original PGN entry")
+        ? (lastMove.originalNote && lastMove.originalNote.nags.length ? "Original mark " + lastMove.originalNote.nags.join(" ") : lastMove.sourceDerived ? "Derived from original eval: " + lastMove.grade + " · " + formatLoss(lastMove.loss) : "No saved move judgement")
         : lastMove.grade + " · " + formatLoss(lastMove.loss);
       gradeMetric.append(gradeLabel, gradeValue);
       selectedReviewEl.append(gradeMetric);
@@ -930,13 +931,28 @@
           originalNote
         };
       });
-      const moveReviews = parsedGame.moves.map((move, index) => ({
-        ...move,
-        originalNote: state.originalNotes[index] || null,
-        grade: state.originalNotes[index] && state.originalNotes[index].nags.length ? "Original mark" : "Original PGN",
-        bestMoveMatch: false,
-        loss: null
-      }));
+      const moveReviews = parsedGame.moves.map((move, index) => {
+        const originalNote = state.originalNotes[index] || null;
+        const previousEval = index > 0 ? (state.originalNotes[index - 1] && state.originalNotes[index - 1].eval) : null;
+        const currentEval = originalNote && originalNote.eval;
+        let loss = null;
+        let sourceDerived = false;
+        let grade = originalNote && originalNote.nags.length ? "Original mark" : "Original PGN";
+        if ((!originalNote || !originalNote.nags.length) && previousEval && currentEval) {
+          loss = moveLoss(previousEval.whiteCp, currentEval.whiteCp, move.color);
+          const moverAdvantage = move.color === "w" ? previousEval.whiteCp : -previousEval.whiteCp;
+          grade = gradeMove(loss, false, moverAdvantage);
+          sourceDerived = true;
+        }
+        return {
+          ...move,
+          originalNote,
+          grade,
+          sourceDerived,
+          bestMoveMatch: false,
+          loss
+        };
+      });
       state.review = {
         positions,
         moves: parsedGame.moves,
