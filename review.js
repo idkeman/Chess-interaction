@@ -397,7 +397,7 @@
   function drawArrows(position) {
     if (!arrowSvg) return;
     arrowSvg.querySelectorAll("line").forEach((line) => line.remove());
-    if (!position || !position.lines || !position.lines.length) return;
+    if (!position) return;
 
     const note = position.originalNote;
     if (note && note.arrows.length) {
@@ -427,7 +427,7 @@
         arrowSvg.append(circle);
       });
     }
-    position.lines.slice(0, 2).forEach((candidate, index) => {
+    (position.lines || []).slice(0, 2).forEach((candidate, index) => {
       const move = candidate.pv && candidate.pv[0];
       if (!move || !/^[a-h][1-8][a-h][1-8][qrbn]?$/i.test(move)) return;
       const fromFile = move.charCodeAt(0) - 97;
@@ -484,7 +484,7 @@
     ctx.stroke();
     ctx.setLineDash([]);
 
-    const values = review.positions.map((position) => Math.max(-1000, Math.min(1000, position.whiteCp || 0)));
+    const values = review.positions.map((position) => Math.max(-1000, Math.min(1000, position.chartWhiteCp ?? position.whiteCp ?? 0)));
     if (values.length < 2) return;
     const xFor = (i) => 4 + i / (values.length - 1) * (width - 8);
     const yFor = (cp) => {
@@ -590,7 +590,7 @@
     const metricLabel = document.createElement("span");
     metricLabel.textContent = "Evaluation";
     const metricValue = document.createElement("span");
-    metricValue.textContent = formatEval(position.whiteCp) + " · " + sideToMove + " to move";
+    metricValue.textContent = formatEval(position.originalWhiteCp ?? position.whiteCp) + " · " + sideToMove + " to move" + (position.originalWhiteCp != null ? " · Original PGN" : " · Stockfish");
     metrics.append(metricLabel, metricValue);
     selectedReviewEl.append(metrics);
 
@@ -666,7 +666,10 @@
   function renderSummary(review) {
     const whiteName = review.headers.white || state.selectedGame?.white?.username || "White";
     const blackName = review.headers.black || state.selectedGame?.black?.username || "Black";
-    const originalAccuracy = state.selectedGame?.accuracies || {};
+    const originalAccuracy = state.selectedGame?.accuracies || {
+      white: review.headers.whiteAccuracy,
+      black: review.headers.blackAccuracy
+    };
     const chessComAccuracy = (value) => {
       const numeric = Number(value);
       if (!Number.isFinite(numeric) || numeric <= 0) return null;
