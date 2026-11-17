@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="./styles.css">
   <script defer src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script defer src="./app.js"></script>
+  <script defer src="./review.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -99,7 +100,8 @@
               <div class="viewer-topline"><span>GAME VIEWER</span><span id="game-result" class="game-result">SELECT A GAME</span></div>
               <div class="board-wrap">
                 <div class="board-coordinates" aria-hidden="true"><span>8</span><span>7</span><span>6</span><span>5</span><span>4</span><span>3</span><span>2</span><span>1</span></div>
-                <div id="chessboard" class="chessboard" aria-label="Chess board position"></div>
+                <div class="eval-track" aria-label="White to Black evaluation bar"><div id="eval-fill" class="eval-fill"></div><span id="eval-score" class="eval-score">—</span></div>
+                <div class="board-surface"><div id="chessboard" class="chessboard" aria-label="Chess board position"></div><svg id="board-arrows" class="board-arrows" viewBox="0 0 8 8" aria-hidden="true"><defs><marker id="best-arrow-head" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#a5d5a9"></path></marker><marker id="alt-arrow-head" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#e5bd76"></path></marker></defs></svg></div>
                 <div class="file-coordinates" aria-hidden="true"><span>a</span><span>b</span><span>c</span><span>d</span><span>e</span><span>f</span><span>g</span><span>h</span></div>
               </div>
               <div class="move-controls">
@@ -109,6 +111,42 @@
                 <button id="next-move" type="button" aria-label="Next move" disabled>→</button>
                 <button id="last-move" type="button" aria-label="Go to end" disabled>⇥</button>
               </div>
+              <section id="review-workspace" class="review-workspace">
+                <div class="review-toolbar">
+                  <div><p class="eyebrow">ENGINE ANALYSIS</p><h3>Game review</h3><p class="review-disclaimer">Independent Stockfish analysis · not Chess.com's original review</p></div>
+                  <div class="review-run-controls">
+                    <label class="depth-picker" for="analysis-depth">Depth
+                      <select id="analysis-depth"><option value="10" selected>10 · Fast</option><option value="12">12 · Balanced</option><option value="14">14 · Deep</option></select>
+                    </label>
+                    <button id="analyze-game" class="analyze-button" type="button" disabled>Analyze game</button>
+                    <button id="cancel-analysis" class="cancel-analysis hidden" type="button">Stop</button>
+                  </div>
+                </div>
+                <div id="analysis-status" class="analysis-status" role="status" aria-live="polite">Choose a finished game, then run an analysis.</div>
+                <div class="analysis-progress-track"><div id="analysis-progress" class="analysis-progress"></div></div>
+                <div id="analysis-results" class="analysis-results hidden">
+                  <div class="analysis-summary-grid">
+                    <article class="analysis-summary-card"><span class="summary-label" id="white-analysis-name">WHITE ACCURACY</span><strong id="white-accuracy">—</strong><span id="white-performance" class="summary-sub">Performance estimate —</span></article>
+                    <article class="analysis-summary-card"><span class="summary-label" id="black-analysis-name">BLACK ACCURACY</span><strong id="black-accuracy">—</strong><span id="black-performance" class="summary-sub">Performance estimate —</span></article>
+                    <article class="analysis-summary-card"><span class="summary-label">MOVE QUALITY</span><strong id="game-quality">—</strong><span id="game-quality-sub" class="summary-sub">Engine-reviewed moves</span></article>
+                  </div>
+                  <div class="eval-graph-card">
+                    <div class="analysis-card-heading"><strong>Evaluation through the game</strong><span>White advantage ↑</span></div>
+                    <canvas id="evaluation-graph" width="800" height="170" aria-label="Evaluation graph. Select a point to jump to that position."></canvas>
+                  </div>
+                  <div class="analysis-detail-grid">
+                    <div class="analysis-detail-card">
+                      <div class="analysis-card-heading"><strong>Move feedback</strong><span id="move-feedback-count">—</span></div>
+                      <div id="move-feedback" class="move-feedback"><p class="analysis-empty">Move-by-move classifications will appear here.</p></div>
+                    </div>
+                    <div class="analysis-detail-card">
+                      <div class="analysis-card-heading"><strong>Best line &amp; threats</strong><span class="engine-tag">ENGINE PV</span></div>
+                      <div id="selected-move-review" class="selected-move-review"><p class="analysis-empty">Select a position to inspect the engine's best continuation and tactical ideas.</p></div>
+                    </div>
+                  </div>
+                  <div class="analysis-footnote">Accuracy and playing-strength figures are estimates calculated from this engine run. They are not Chess.com scores, account ratings, or saved annotations from the original game.</div>
+                </div>
+              </section>
               <div class="viewer-footer">
                 <div><strong id="game-players">Choose a game to replay</strong><span id="game-details">Moves are displayed locally from the published PGN.</span></div>
                 <div class="viewer-actions"><a id="source-game-link" class="source-link hidden" href="https://www.chess.com" target="_blank" rel="noopener noreferrer">Open original ↗</a><button id="download-pgn" class="download-button" type="button" disabled>↓ PGN</button></div>
