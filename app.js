@@ -525,13 +525,78 @@
     }
   }
 
+  function pgnTag(pgn, name) {
+    const match = String(pgn).match(new RegExp("^\\\\[" + name + '\\\\s+"([^"]*)"\\\\]', "mi"));
+    return match ? match[1] : "";
+  }
+
+  function loadImportedPgn(pgn) {
+    const source = String(pgn || "").trim();
+    if (!source) throw new Error("Choose a PGN file or paste its contents first.");
+    if (typeof window.Chess !== "function") throw new Error("The chess rules library did not load. Reload and try again.");
+
+    const parser = new window.Chess();
+    let loaded = false;
+    try { loaded = parser.load_pgn(source); }
+    catch (error) { throw new Error("The imported PGN could not be read: " + error.message); }
+    if (!loaded) throw new Error("The imported PGN could not be parsed. Check that it contains a complete game.");
+
+    const headers = {
+      white: pgnTag(source, "White") || "White",
+      black: pgnTag(source, "Black") || "Black",
+      whiteElo: pgnTag(source, "WhiteElo"),
+      blackElo: pgnTag(source, "BlackElo"),
+      date: pgnTag(source, "Date"),
+      result: pgnTag(source, "Result") || "*",
+      link: pgnTag(source, "Link") || pgnTag(source, "URL") || ""
+    };
+    const rating = (value) => /^\\d+$/.test(value) ? Number(value) : null;
+    const game = {
+      pgn: source,
+      url: headers.link,
+      accuracies: null,
+      white: { username: headers.white, rating: rating(headers.whiteElo) },
+      black: { username: headers.black, rating: rating(headers.blackElo) },
+      imported: true
+    };
+
+    state.selectedGameIndex = -1;
+    state.selectedPgn = source;
+    state.moveHistory = parser.history();
+    state.replayChess = new window.Chess();
+    $("#game-result").textContent = headers.result === "1-0" ? "1-0" : headers.result === "0-1" ? "0-1" : headers.result === "1/2-1/2" ? "½-½" : "—";
+    $("#game-players").textContent = headers.white + "  vs  " + headers.black;
+    $("#game-details").textContent = ["IMPORTED PGN", headers.date || "Date not recorded"].join(" · ");
+    $("#download-pgn").disabled = false;
+
+    const sourceLink = $("#source-game-link");
+    sourceLink.classList.add("hidden");
+    try {
+      const originalUrl = new URL(String(headers.link || ""));
+      if (originalUrl.protocol === "https:" && ["chess.com", "www.chess.com"].includes(originalUrl.hostname)) {
+        sourceLink.href = originalUrl.href;
+        sourceLink.classList.remove("hidden");
+      }
+    } catch {
+      // An exported PGN may not contain its original game URL.
+    }
+
+    renderGames(state.games);
+    goToMove(0);
+    window.dispatchEvent(new CustomEvent("knightline:game-selected", {
+      detail: { username: state.username, game, pgn: source, imported: true }
+    }));
+    setStatus("Imported PGN loaded. Original Computer Analysis annotations will be shown when they are embedded in the file.");
+    return true;
+  }
+
   function downloadSelectedPgn() {
     if (!state.selectedPgn) return;
     const blob = new Blob([state.selectedPgn], { type: "application/x-chess-pgn;charset=utf-8" });
     const objectUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = objectUrl;
-    link.download = (state.username || "chess-game") + "-game.pgn";
+    link.download = (state.selectedGameIndex === -1 ? "knightline-imported-game" : (state.username || "chess-game")) + ".pgn";
     document.body.append(link);
     link.click();
     link.remove();
