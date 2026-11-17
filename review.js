@@ -40,7 +40,7 @@
   function setRunning(running) {
     state.running = running;
     analyzeButton.disabled = running || !state.selectedPgn;
-    analyzeButton.textContent = running ? "Analyzing…" : (state.review ? "Re-analyze" : "Analyze game");
+    analyzeButton.textContent = running ? "Analyzing…" : (state.review && !state.review.sourceOnly ? "Re-analyze" : "Analyze game");
     cancelButton.classList.toggle("hidden", !running);
   }
 
@@ -906,14 +906,52 @@
     setProgress(0);
     setRunning(false);
     analyzeButton.disabled = !state.selectedPgn;
-    if (state.originalEvalCount || originalCommentCount || originalArrowCount || originalNagCount) {
-      setStatus("Original PGN data detected: " + state.originalEvalCount + " evaluations · " + originalCommentCount + " comments · " + originalArrowCount + " arrows/marks · " + originalNagCount + " judgements. Run review for full feedback.");
-    } else {
-      setStatus(state.selectedPgn ? "No original move analysis was embedded in this PGN. Run Stockfish for independent review." : "Select a game to begin.");
-    }
     drawArrows(null);
     updateEvalBar(null);
     state.cancelled = false;
+
+    if (state.originalEvalCount || originalCommentCount || originalArrowCount || originalNagCount) {
+      const parsedGame = parsedSelected;
+      const positions = parsedGame.positions.map((position, index) => {
+        const originalNote = index > 0 ? (state.originalNotes[index - 1] || null) : null;
+        const originalCp = originalNote && originalNote.eval ? originalNote.eval.whiteCp : null;
+        return {
+          fen: position.fen,
+          turn: position.turn,
+          whiteCp: null,
+          originalWhiteCp: originalCp,
+          chartWhiteCp: originalCp,
+          lines: [],
+          originalNote
+        };
+      });
+      const moveReviews = parsedGame.moves.map((move, index) => ({
+        ...move,
+        originalNote: state.originalNotes[index] || null,
+        grade: state.originalNotes[index] && state.originalNotes[index].nags.length ? "Original mark" : "Original PGN",
+        bestMoveMatch: false,
+        loss: null
+      }));
+      state.review = {
+        positions,
+        moves: parsedGame.moves,
+        moveReviews,
+        headers: parsedGame.headers,
+        originalEvalCount: state.originalEvalCount,
+        sourceOnly: true
+      };
+      renderSummary(state.review);
+      makeMoveFeedback(state.review);
+      $("#eval-graph-card").classList.toggle("hidden", state.originalEvalCount === 0);
+      if (state.originalEvalCount > 0) drawEvaluationGraph(state.review);
+      resultsEl.classList.remove("hidden");
+      setStatus("Showing original PGN annotations · " + state.originalEvalCount + " evaluations · " + originalCommentCount + " comments · " + originalArrowCount + " arrows/marks · " + originalNagCount + " judgements. Run Stockfish for additional analysis.");
+      showSelectedPosition(window.KnightlineBridge.getMoveIndex());
+    } else {
+      $("#eval-graph-card").classList.add("hidden");
+      resultsEl.classList.add("hidden");
+      setStatus(state.selectedPgn ? "No original move analysis was embedded in this PGN. Run Stockfish for independent review." : "Select a game to begin.");
+    }
   });
 
   window.addEventListener("knightline:game-cleared", () => {
@@ -927,6 +965,7 @@
     state.originalNotes = [];
     state.originalEvalCount = 0;
     resultsEl.classList.add("hidden");
+    $("#eval-graph-card").classList.add("hidden");
     setProgress(0);
     setRunning(false);
     analyzeButton.disabled = true;
