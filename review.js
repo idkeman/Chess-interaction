@@ -759,6 +759,13 @@
       }
 
       if (state.cancelled || runId !== state.runId) throw new Error("Analysis stopped.");
+      evaluated.forEach((position, index) => {
+        const originalNote = index > 0 ? (state.originalNotes[index - 1] || null) : null;
+        position.originalNote = originalNote;
+        if (originalNote && originalNote.eval) position.originalWhiteCp = originalNote.eval.whiteCp;
+        position.chartWhiteCp = position.originalWhiteCp != null ? position.originalWhiteCp : position.whiteCp;
+      });
+
       const moveReviews = parsed.moves.map((move, index) => {
         const before = evaluated[index];
         const after = evaluated[index + 1];
@@ -768,8 +775,10 @@
         const bestMoveMatch = beforeBest && beforeBest.toLowerCase() === playedUci.toLowerCase();
         const bestMoveSan = beforeBest ? uciToSan(before.fen, [beforeBest])[0] : "";
         const moverAdvantage = move.color === "w" ? before.whiteCp : -before.whiteCp;
+        const originalNote = state.originalNotes[index] || null;
         return {
           ...move,
+          originalNote,
           loss,
           bestMoveMatch: Boolean(bestMoveMatch),
           bestMoveSan: bestMoveSan || "",
