@@ -251,8 +251,9 @@
     return san;
   }
 
-  function gradeMove(loss, bestMoveMatch) {
+  function gradeMove(loss, bestMoveMatch, moverAdvantage) {
     if (bestMoveMatch) return "Best";
+    if (moverAdvantage >= 300 && loss >= 120) return "Miss";
     if (loss <= 25) return "Excellent";
     if (loss <= 65) return "Good";
     if (loss <= 120) return "Inaccuracy";
@@ -524,24 +525,37 @@
   function renderSummary(review) {
     const whiteName = review.headers.white || state.selectedGame?.white?.username || "White";
     const blackName = review.headers.black || state.selectedGame?.black?.username || "Black";
-    $("#white-analysis-name").textContent = whiteName.toUpperCase() + " · ACCURACY";
-    $("#black-analysis-name").textContent = blackName.toUpperCase() + " · ACCURACY";
+    const originalAccuracy = state.selectedGame?.accuracies || {};
+    const chessComAccuracy = (value) => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric) || numeric <= 0) return null;
+      return Math.max(0, Math.min(100, numeric <= 1 ? numeric * 100 : numeric));
+    };
+    const whiteOriginal = chessComAccuracy(originalAccuracy.white);
+    const blackOriginal = chessComAccuracy(originalAccuracy.black);
+
+    $("#white-analysis-name").textContent = whiteOriginal == null ? whiteName.toUpperCase() + " · ENGINE ESTIMATE" : whiteName.toUpperCase() + " · CHESS.COM ACCURACY";
+    $("#black-analysis-name").textContent = blackOriginal == null ? blackName.toUpperCase() + " · ENGINE ESTIMATE" : blackName.toUpperCase() + " · CHESS.COM ACCURACY";
 
     const whiteLosses = review.moveReviews.filter((item) => item.color === "w").map((item) => item.loss);
     const blackLosses = review.moveReviews.filter((item) => item.color === "b").map((item) => item.loss);
-    const whiteAccuracy = estimateAccuracy(whiteLosses);
-    const blackAccuracy = estimateAccuracy(blackLosses);
+    const whiteEstimate = estimateAccuracy(whiteLosses);
+    const blackEstimate = estimateAccuracy(blackLosses);
     const whitePerf = estimatePerformanceRating(whiteLosses);
     const blackPerf = estimatePerformanceRating(blackLosses);
+    const recordedWhiteRating = state.selectedGame?.white?.rating || review.headers.whiteElo;
+    const recordedBlackRating = state.selectedGame?.black?.rating || review.headers.blackElo;
 
-    $("#white-accuracy").textContent = whiteAccuracy == null ? "—" : whiteAccuracy + "%";
-    $("#black-accuracy").textContent = blackAccuracy == null ? "—" : blackAccuracy + "%";
+    $("#white-accuracy").textContent = whiteOriginal == null ? (whiteEstimate == null ? "—" : whiteEstimate + "%") : whiteOriginal.toFixed(1) + "%";
+    $("#black-accuracy").textContent = blackOriginal == null ? (blackEstimate == null ? "—" : blackEstimate + "%") : blackOriginal.toFixed(1) + "%";
     $("#white-performance").textContent = [
-      review.headers.whiteElo ? "Recorded " + review.headers.whiteElo : "",
+      recordedWhiteRating ? "Recorded rating " + Number(recordedWhiteRating).toLocaleString() : "",
+      whiteOriginal == null ? "Engine estimate " + (whiteEstimate == null ? "—" : whiteEstimate + "%") : "Local estimate " + (whiteEstimate == null ? "—" : whiteEstimate + "%"),
       whitePerf == null ? "" : "Est. level " + whitePerf
     ].filter(Boolean).join(" · ") || "No rating data in PGN";
     $("#black-performance").textContent = [
-      review.headers.blackElo ? "Recorded " + review.headers.blackElo : "",
+      recordedBlackRating ? "Recorded rating " + Number(recordedBlackRating).toLocaleString() : "",
+      blackOriginal == null ? "Engine estimate " + (blackEstimate == null ? "—" : blackEstimate + "%") : "Local estimate " + (blackEstimate == null ? "—" : blackEstimate + "%"),
       blackPerf == null ? "" : "Est. level " + blackPerf
     ].filter(Boolean).join(" · ") || "No rating data in PGN";
 
@@ -613,12 +627,13 @@
         const loss = moveLoss(before.whiteCp, after.whiteCp, move.color);
         const bestMoveMatch = beforeBest && beforeBest.toLowerCase() === playedUci.toLowerCase();
         const bestMoveSan = beforeBest ? uciToSan(before.fen, [beforeBest])[0] : "";
+        const moverAdvantage = move.color === "w" ? before.whiteCp : -before.whiteCp;
         return {
           ...move,
           loss,
           bestMoveMatch: Boolean(bestMoveMatch),
           bestMoveSan: bestMoveSan || "",
-          grade: gradeMove(loss, Boolean(bestMoveMatch))
+          grade: gradeMove(loss, Boolean(bestMoveMatch), moverAdvantage)
         };
       });
 
