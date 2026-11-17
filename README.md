@@ -31,7 +31,7 @@ No build step, API key, database, or server-side secret is required.
 
 ## Chess.com integration boundaries
 
-Knightline uses Chess.com's official Published-Data API. That API is public and read-only: it provides public profile, rating, and game archive data, but does not accept moves or commands for live games. For live play, sign-in, and account actions, use Chess.com directly.
+Knightline uses Chess.com's official Published-Data API. That API is public and read-only: it provides public profile, rating, and game archive data, but does not accept moves or commands for live games. For live play, sign-in, and account actions, use Chess.com directly. Apps that need account authentication (OAuth) or Connected Board access must use [Chess.com's official request form](https://docs.google.com/forms/d/e/1FAIpQLSds2AeKLj9xqgu96Pu-rEAS0ItyqDbZbSgUFer0Mo6qMRx4Jg/viewform); Chess.com reviews those requests separately.
 
 The public API can serve cached data; profile and game information may not reflect changes immediately. The app requests data sequentially to avoid unnecessary parallel traffic.
 
