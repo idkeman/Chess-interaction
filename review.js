@@ -416,6 +416,7 @@
         line.setAttribute("x2", String(toFile + 0.5));
         line.setAttribute("y2", String(8 - toRank + 0.5));
         line.setAttribute("class", "original-arrow " + arrow.color);
+        line.setAttribute("marker-end", "url(#original-" + arrow.color + "-head)");
         arrowSvg.append(line);
       });
     }
