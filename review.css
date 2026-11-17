@@ -167,3 +167,5 @@
 }
 
 .grade-pill.original-annotation { background: rgba(212,183,123,.17); color: #e4c783; border: 1px solid rgba(212,183,123,.22); }
+
+.grade-pill.derived-annotation { background: rgba(129,178,205,.13); color: #a3cfe5; border: 1px solid rgba(129,178,205,.2); }
