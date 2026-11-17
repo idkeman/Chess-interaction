@@ -271,12 +271,6 @@
     return Math.max(0, Math.min(100, Math.round(100 * Math.exp(-average / 165))));
   }
 
-  function estimatePerformanceRating(losses) {
-    if (!losses.length) return null;
-    const average = losses.reduce((sum, loss) => sum + loss, 0) / losses.length;
-    const estimate = 3000 - 430 * Math.log(Math.max(1, average));
-    return Math.max(400, Math.min(3000, Math.round(estimate / 10) * 10));
-  }
 
   function moveLoss(before, after, color) {
     const delta = color === "w" ? before - after : after - before;
@@ -541,23 +535,19 @@
     const blackLosses = review.moveReviews.filter((item) => item.color === "b").map((item) => item.loss);
     const whiteEstimate = estimateAccuracy(whiteLosses);
     const blackEstimate = estimateAccuracy(blackLosses);
-    const whitePerf = estimatePerformanceRating(whiteLosses);
-    const blackPerf = estimatePerformanceRating(blackLosses);
     const recordedWhiteRating = state.selectedGame?.white?.rating || review.headers.whiteElo;
     const recordedBlackRating = state.selectedGame?.black?.rating || review.headers.blackElo;
 
     $("#white-accuracy").textContent = whiteOriginal == null ? (whiteEstimate == null ? "—" : whiteEstimate + "%") : whiteOriginal.toFixed(1) + "%";
     $("#black-accuracy").textContent = blackOriginal == null ? (blackEstimate == null ? "—" : blackEstimate + "%") : blackOriginal.toFixed(1) + "%";
     $("#white-performance").textContent = [
-      recordedWhiteRating ? "Recorded rating " + Number(recordedWhiteRating).toLocaleString() : "",
-      whiteOriginal == null ? "Engine estimate " + (whiteEstimate == null ? "—" : whiteEstimate + "%") : "Local estimate " + (whiteEstimate == null ? "—" : whiteEstimate + "%"),
-      whitePerf == null ? "" : "Est. level " + whitePerf
-    ].filter(Boolean).join(" · ") || "No rating data in PGN";
+      recordedWhiteRating ? "Game rating " + Number(recordedWhiteRating).toLocaleString() : "Game rating not recorded",
+      "Independent estimate " + (whiteEstimate == null ? "—" : whiteEstimate + "%")
+    ].join(" · ");
     $("#black-performance").textContent = [
-      recordedBlackRating ? "Recorded rating " + Number(recordedBlackRating).toLocaleString() : "",
-      blackOriginal == null ? "Engine estimate " + (blackEstimate == null ? "—" : blackEstimate + "%") : "Local estimate " + (blackEstimate == null ? "—" : blackEstimate + "%"),
-      blackPerf == null ? "" : "Est. level " + blackPerf
-    ].filter(Boolean).join(" · ") || "No rating data in PGN";
+      recordedBlackRating ? "Game rating " + Number(recordedBlackRating).toLocaleString() : "Game rating not recorded",
+      "Independent estimate " + (blackEstimate == null ? "—" : blackEstimate + "%")
+    ].join(" · ");
 
     const reviewed = review.moveReviews.length;
     const bestCount = review.moveReviews.filter((item) => item.grade === "Best" || item.grade === "Excellent").length;
