@@ -149,7 +149,7 @@
   background: rgba(212,183,123,.13); color: var(--gold); font: 8px 'DM Mono', monospace;
 }
 .original-comment { margin-top: 6px; color: #d5c29b; font-size: 8px; line-height: 1.5; }
-.board-arrows .original-arrow { stroke-width: .12; stroke-linecap: round; marker-end: url(#best-arrow-head); opacity: .95; }
+.board-arrows .original-arrow { stroke-width: .12; stroke-linecap: round; opacity: .95; }
 .board-arrows .original-arrow.red { stroke: #ed7770; }
 .board-arrows .original-arrow.green { stroke: #9ed2a7; }
 .board-arrows .original-arrow.yellow { stroke: #e4c36e; }
@@ -165,3 +165,5 @@
   #original-pgn-file { flex: 1 1 100%; }
   .import-pgn-button { margin-left: auto; }
 }
+
+.grade-pill.original-annotation { background: rgba(212,183,123,.17); color: #e4c783; border: 1px solid rgba(212,183,123,.22); }
