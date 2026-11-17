@@ -634,6 +634,7 @@
     getSelectedPgn: () => state.selectedPgn,
     getUsername: () => state.username,
     getMoveIndex: () => state.moveIndex,
+    loadPgn: (pgn) => loadImportedPgn(pgn),
     setMove: (index) => goToMove(Math.max(0, Math.min(state.moveHistory.length, Number(index) || 0)))
   };
 
