@@ -685,6 +685,21 @@
     const whiteOriginal = chessComAccuracy(originalAccuracy.white);
     const blackOriginal = chessComAccuracy(originalAccuracy.black);
 
+    if (review.sourceOnly) {
+      $("#white-analysis-name").textContent = whiteName.toUpperCase() + " · ORIGINAL ACCURACY";
+      $("#black-analysis-name").textContent = blackName.toUpperCase() + " · ORIGINAL ACCURACY";
+      $("#white-accuracy").textContent = whiteOriginal == null ? "—" : whiteOriginal.toFixed(1) + "%";
+      $("#black-accuracy").textContent = blackOriginal == null ? "—" : blackOriginal.toFixed(1) + "%";
+      const whiteRating = state.selectedGame?.white?.rating || review.headers.whiteElo;
+      const blackRating = state.selectedGame?.black?.rating || review.headers.blackElo;
+      $("#white-performance").textContent = whiteRating ? "Recorded game rating " + Number(whiteRating).toLocaleString() : "No game rating in this PGN";
+      $("#black-performance").textContent = blackRating ? "Recorded game rating " + Number(blackRating).toLocaleString() : "No game rating in this PGN";
+      const sourceItems = review.moveReviews.reduce((sum, item) => sum + (item.originalNote ? item.originalNote.comments.length + item.originalNote.nags.length + item.originalNote.arrows.length + item.originalNote.squares.length + (item.originalNote.eval ? 1 : 0) : 0), 0);
+      $("#game-quality").textContent = String(sourceItems);
+      $("#game-quality-sub").textContent = "Original PGN annotations";
+      return;
+    }
+
     $("#white-analysis-name").textContent = whiteOriginal == null ? whiteName.toUpperCase() + " · ENGINE ESTIMATE" : whiteName.toUpperCase() + " · CHESS.COM ACCURACY";
     $("#black-analysis-name").textContent = blackOriginal == null ? blackName.toUpperCase() + " · ENGINE ESTIMATE" : blackName.toUpperCase() + " · CHESS.COM ACCURACY";
 
