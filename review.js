@@ -2,7 +2,6 @@
   "use strict";
 
   const $ = (selector) => document.querySelector(selector);
-  const ENGINE_JS = "https://cdn.jsdelivr.net/npm/stockfish@19.0.0/bin/stockfish-19-lite-single.js";
   const ENGINE_WASM = "https://cdn.jsdelivr.net/npm/stockfish@19.0.0/bin/stockfish-19-lite-single.wasm";
   const state = {
     engine: null,
@@ -11,7 +10,8 @@
     review: null,
     selectedPgn: "",
     selectedGame: null,
-    selectedUsername: ""
+    selectedUsername: "",
+    runId: 0
   };
 
   const analyzeButton = $("#analyze-game");
@@ -435,7 +435,7 @@
     });
     moveFeedbackEl.append(fragment);
 
-    const critical = counts.Blunder || counts.Mistake || counts.Inaccuracy || 0;
+    const critical = (counts.Blunder || 0) + (counts.Mistake || 0) + (counts.Inaccuracy || 0) + (counts.Miss || 0);
     $("#move-feedback-count").textContent = review.moveReviews.length + " reviewed · " + critical + " key errors";
   }
 
@@ -553,6 +553,7 @@
 
   async function runReview() {
     if (!state.selectedPgn || state.running) return;
+    const runId = ++state.runId;
     if (!window.KnightlineBridge) {
       setStatus("The game viewer is not ready. Reload the page and try again.", true);
       return;
@@ -581,7 +582,7 @@
 
       const evaluated = [];
       for (let i = 0; i < parsed.positions.length; i += 1) {
-        if (state.cancelled) throw new Error("Analysis stopped.");
+        if (state.cancelled || runId !== state.runId) throw new Error("Analysis stopped.");
         const current = parsed.positions[i];
         const result = await state.engine.analyze(current.fen, depth, (currentDepth) => {
           if (i === 0 || i % 4 === 0) setStatus("Analyzing position " + (i + 1) + " of " + total + " · depth " + currentDepth);
@@ -603,7 +604,7 @@
         }
       }
 
-      if (state.cancelled) throw new Error("Analysis stopped.");
+      if (state.cancelled || runId !== state.runId) throw new Error("Analysis stopped.");
       const moveReviews = parsed.moves.map((move, index) => {
         const before = evaluated[index];
         const after = evaluated[index + 1];
@@ -636,13 +637,15 @@
       setStatus("Review complete · " + total + " positions analyzed at depth " + depth + ".");
       showSelectedPosition(window.KnightlineBridge.getMoveIndex());
     } catch (error) {
-      if (!state.cancelled) setStatus(error.message || "Analysis failed. Try again.", true);
-      if (state.cancelled) setStatus("Analysis stopped. You can run it again.");
+      if (runId === state.runId && !state.cancelled) setStatus(error.message || "Analysis failed. Try again.", true);
+      if (runId === state.runId && state.cancelled) setStatus("Analysis stopped. You can run it again.");
     } finally {
-      if (state.engine) state.engine.terminate();
-      state.engine = null;
-      setRunning(false);
-      state.cancelled = false;
+      if (runId === state.runId) {
+        if (state.engine) state.engine.terminate();
+        state.engine = null;
+        setRunning(false);
+        state.cancelled = false;
+      }
     }
   }
 
@@ -660,6 +663,7 @@
 
   window.addEventListener("knightline:game-selected", (event) => {
     const detail = event.detail || {};
+    state.runId += 1;
     if (state.engine) state.engine.terminate();
     state.engine = null;
     state.cancelled = true;
@@ -680,6 +684,7 @@
   });
 
   window.addEventListener("knightline:game-cleared", () => {
+    state.runId += 1;
     if (state.engine) state.engine.terminate();
     state.engine = null;
     state.cancelled = true;
