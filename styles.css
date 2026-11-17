@@ -247,3 +247,8 @@ h1 span { color: var(--accent); }
   .move-controls button { min-width: 30px; }
   .move-controls span { min-width: 105px; font-size: 9px; }
 }
+
+.viewer-actions { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.source-link { border: 1px solid rgba(212,183,123,.25); border-radius: 6px; background: transparent; color: var(--gold); padding: 8px 9px; font: 10px 'DM Mono', monospace; white-space: nowrap; }
+.source-link:hover { background: rgba(212,183,123,.08); }
+@media (max-width: 390px) { .viewer-actions { gap: 5px; } .source-link, .download-button { padding: 8px 7px; font-size: 9px; } }
