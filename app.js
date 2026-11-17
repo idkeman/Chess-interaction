@@ -526,8 +526,12 @@
   }
 
   function pgnTag(pgn, name) {
-    const match = String(pgn).match(new RegExp("^\\\\[" + name + '\\\\s+"([^"]*)"\\\\]', "mi"));
-    return match ? match[1] : "";
+    const lines = String(pgn).match(/^\[[A-Za-z0-9_]+\s+"[^"]*"\]/gm) || [];
+    for (const line of lines) {
+      const match = line.match(/^\[([A-Za-z0-9_]+)\s+"([^"]*)"\]/);
+      if (match && match[1].toLowerCase() === String(name).toLowerCase()) return match[2];
+    }
+    return "";
   }
 
   function loadImportedPgn(pgn) {
