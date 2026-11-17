@@ -450,7 +450,7 @@
       evalScore.textContent = "—";
       return;
     }
-    const cp = position.whiteCp || 0;
+    const cp = position.originalWhiteCp ?? position.whiteCp ?? 0;
     const ratio = 1 / (1 + Math.exp(-Math.max(-1000, Math.min(1000, cp)) / 250));
     evalFill.style.height = (ratio * 100).toFixed(1) + "%";
     evalScore.textContent = formatEval(cp);
@@ -825,6 +825,26 @@
   analyzeButton.addEventListener("click", runReview);
   cancelButton.addEventListener("click", cancelReview);
 
+  const originalPgnFile = $("#original-pgn-file");
+  const originalPgnText = $("#original-pgn-text");
+  $("#import-original-pgn").addEventListener("click", () => {
+    try {
+      window.KnightlineBridge.loadPgn(originalPgnText.value);
+    } catch (error) {
+      setStatus(error.message || "Could not import that PGN.", true);
+    }
+  });
+  originalPgnFile.addEventListener("change", async () => {
+    const file = originalPgnFile.files && originalPgnFile.files[0];
+    if (!file) return;
+    try {
+      originalPgnText.value = await file.text();
+      setStatus("Loaded " + file.name + ". Import it to replay the game and read embedded analysis.");
+    } catch (error) {
+      setStatus("Could not read that local file: " + error.message, true);
+    }
+  });
+
   window.addEventListener("knightline:game-selected", (event) => {
     const detail = event.detail || {};
     state.runId += 1;
@@ -835,13 +855,24 @@
     state.selectedPgn = detail.pgn || "";
     state.selectedGame = detail.game || null;
     state.selectedUsername = detail.username || "";
+    let parsedSelected = null;
+    try { parsedSelected = parseGamePositions(state.selectedPgn); } catch {}
+    state.originalNotes = parsedSelected ? parsePgnAnnotations(state.selectedPgn, parsedSelected.moves.length) : [];
+    state.originalEvalCount = state.originalNotes.filter((note) => note.eval).length;
+    const originalCommentCount = state.originalNotes.reduce((sum, note) => sum + note.comments.length, 0);
+    const originalArrowCount = state.originalNotes.reduce((sum, note) => sum + note.arrows.length + note.squares.length, 0);
+    const originalNagCount = state.originalNotes.reduce((sum, note) => sum + note.nags.length, 0);
     resultsEl.classList.add("hidden");
     moveFeedbackEl.replaceChildren();
     selectedReviewEl.textContent = "Run an analysis to reveal move judgments, the best line, and tactical continuations.";
     setProgress(0);
     setRunning(false);
     analyzeButton.disabled = !state.selectedPgn;
-    setStatus(state.selectedPgn ? "Ready to analyze this completed game." : "Select a game to begin.");
+    if (state.originalEvalCount || originalCommentCount || originalArrowCount || originalNagCount) {
+      setStatus("Original PGN data detected: " + state.originalEvalCount + " evaluations · " + originalCommentCount + " comments · " + originalArrowCount + " arrows/marks · " + originalNagCount + " judgements. Run review for full feedback.");
+    } else {
+      setStatus(state.selectedPgn ? "No original move analysis was embedded in this PGN. Run Stockfish for independent review." : "Select a game to begin.");
+    }
     drawArrows(null);
     updateEvalBar(null);
     state.cancelled = false;
@@ -855,6 +886,8 @@
     state.review = null;
     state.selectedPgn = "";
     state.selectedGame = null;
+    state.originalNotes = [];
+    state.originalEvalCount = 0;
     resultsEl.classList.add("hidden");
     setProgress(0);
     setRunning(false);
